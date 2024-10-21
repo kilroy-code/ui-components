@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script type="importmap">
+      {
+	"imports": {
+          "@kilroy-code/rules": "../rules/index.mjs",
+	  "@kilroy-code/ruled-components": "./index.mjs"
+	}
+      }
+    </script>
+    <script type="module" src="playground.mjs"></script>
+    <style>
+      .mars {
+	  --planet-color: red;
+      }
+    </style>
+  </head>
+  <body>
+    <simple-greeting name="World"></simple-greeting>
+
+    <hr>
+    <my-element></my-element><br/>
+    <my-element class="mars" planet="Mars"></my-element>
+
+    <hr>
+    <date-picker></date-picker>
+
+    <hr>
+    <date-element></date-element>
+    <date-element date="Oct 20 2021"></date-element>
+  </body>
+</html>
