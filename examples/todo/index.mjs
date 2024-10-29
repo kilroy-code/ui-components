@@ -136,7 +136,7 @@ export class TodoItem extends RuledElement {
     return `
      <li>
       <input type="checkbox" onchange="hostElement(event).completed = event.target.checked"></input>
-      <span contenteditable oninput="hostElement(event).title = event.target.textContent"></spanl>
+      <span contenteditable oninput="hostElement(event).title = event.target.textContent"></span>
       <button onclick="hostElement(event).remove()">X</button>
      </li>`;
   }
