@@ -12,14 +12,11 @@ window.hostElement = hostElement;
 export class RuledElement extends HTMLElement {
   constructor() {
     super();
-    this.initialize();
-  }
-  $(query) { // FIXME: filled in slots?
-    return this.content.querySelector(query);
+    this.setPropertiesFromAttributes();
+    setTimeout(() => this.initialize());
   }
   initialize() { // Default initializes from attributes and invokes all our rules for any potential side effect on display.
-    this.setPropertiesFromAttributes();
-    setTimeout(() => { this.content; this.update; }); // Compute these two eager rules for effect, but in a different dynamic context.
+    this.content; this.update; // Compute these two eager rules for effect, but in a different dynamic context.
   }
   setPropertiesFromAttributes() { // Sets properties from the given attributes, if any.
     const attributes = this.attributes;
@@ -41,13 +38,13 @@ export class RuledElement extends HTMLElement {
   get styles() { // This CSS is applied exclusively to our component.
     return '';
   }
+  get cssState() {
+    return this.attachInternals();
+  }
   get content() { // Eager rule to setUpShadowTree and populate it with this.template. Must return tree for use by $(query).
-    const tree = this.setUpShadowTree(),
-	  template = document.createElement('template'),
-	  style = document.createElement('style');
-    template.innerHTML = this.template;
-    style.innerHTML = this.styles;
-    tree.append(style, template.content); // No need to cloneNode of our one-off template.
+    const tree = this.setUpShadowTree();
+    this.maybeAppend('style', tree, this.styles);
+    this.maybeAppend('template', tree);  // No need to clone a one-off template
     return tree;
   }
   get update() { // Eager rule to update content. Default is to demand all rules that contain $ or [eE]ffect
@@ -63,6 +60,21 @@ export class RuledElement extends HTMLElement {
     // Push any resulting rules onto ruleNames, for use by update(). IWBNI rulify did this for us. 
     Object.entries(Object.getOwnPropertyDescriptors(proto)).forEach(([key, {get}]) => get && ruleNames.push(key));
     customElements.define(tagName, this);
+  }
+  // Utilities
+  maybeAppend(tag, parent, content = this[tag]) {
+    if (!content) return;
+    const child = document.createElement(tag);
+    child.innerHTML = content;
+    parent.appendChild(child.content || child);
+  }
+  toggleState(name, on = !this.cssStates.states.has(name)) {
+    const operation = on ? 'add' : 'delete';
+    this.cssState.states[operation](name);
+    return !!on;
+  }
+  $(query) {
+    return this.content.querySelector(query) || document.querySelector(query);
   }
 }
 RuledElement.register({eagerNames: ['content', 'update']});

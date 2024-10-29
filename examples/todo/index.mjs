@@ -1,7 +1,6 @@
 import { RuledElement } from '@kilroy-code/ruled-components';
 
 /*
-  persistence
   draggable
   styling
  */
@@ -13,11 +12,11 @@ export class TodoApp extends RuledElement {
       <todo-list></todo-list>
       <footer>
         <span></span>
-        <ul>
-          <li><button onclick="hostElement(event).changeFilter(event)">All</b></li>
-          <li><button onclick="hostElement(event).changeFilter(event)">Active</b></li>
-          <li><button onclick="hostElement(event).changeFilter(event)">Completed</b></li>
-        </ul>
+        <span>
+          <label><input type="radio" name="filter" onchange="hostElement(event).changeFilter(event)" value="All"/>All</label>
+          <label><input type="radio" name="filter" onchange="hostElement(event).changeFilter(event)" value="Active"/>Active</label>
+          <label><input type="radio" name="filter" onchange="hostElement(event).changeFilter(event)" value="Completed"/>Completed</label>
+        </span>
         <button onclick="hostElement(event).clear()">Clear completed</button>
       </footer>
      `;
@@ -32,9 +31,10 @@ export class TodoApp extends RuledElement {
     `;
   }
   changeFilter(event) {
-    const filter = event.target.textContent;
+    const filter = event.target.value;
     this.listComponent.showingCompleted = (filter !== 'Active');
     this.listComponent.showingActive = (filter !== 'Completed');
+    location.hash = filter; // Let URL reflect state.
   }
   clear() {
     for (let component = this.listComponent.lastComponent; component; component = component.preceding) {
@@ -43,6 +43,24 @@ export class TodoApp extends RuledElement {
   }
   get listComponent() { return this.$('todo-list'); }
   get anyCompletedEffect() { return this.toggleState('anyCompleted', this.listComponent.nCompleted); }
+  initialize() {
+    super.initialize();
+    const read = key => JSON.parse(localStorage.getItem(key)),
+	  count = read('n') || 0,
+	  list = this.listComponent,
+	  hash = location.hash || '#All',
+	  target = this.$(`input[value=${hash.slice(1)}]`); // The filter radio button.
+    target.checked = true;
+    this.changeFilter({target});
+    for (let index = 0; index < count; index++) {
+      list.addItem(read(index));
+    }
+  }
+  save(key, value) {
+    localStorage.setItem(key, JSON.stringify(value));
+    return true;
+  }
+  delete(key) { localStorage.removeItem(key); }
 }
 TodoApp.register();
 
@@ -63,9 +81,10 @@ export class TodoList extends RuledElement {
   get listElement() { return this.$('ul'); }
   get statusElement() { return app.$('span'); }
   get lastComponent() { return null; }
+  get lastComponentEffect() { return app.save('n', this.lastComponent?.count || 0); }
   get nActive() { return this.lastComponent?.nActive || 0; }
   get nActiveEffect() { return this.statusElement.textContent = this.nActive === 1 ? '1 item left' : `${this.nActive} items left`; }
-  get nCompleted() { return (this.lastComponent?.index || 0) - this.nActive; }
+  get nCompleted() { return (this.lastComponent?.count || 0) - this.nActive; }
   get showingActive() { return true; }
   get showingActiveEffect() { return this.toggleState('showingActive', this.showingActive); }
   get showingCompleted() { return true; }
@@ -73,9 +92,12 @@ export class TodoList extends RuledElement {
   addEntry(event) {
     const title = event.target.value.trim();
     if (!title) return;
-    this.lastComponent = new TodoItem({title, preceding: this.lastComponent});
-    this.append(this.lastComponent);
+    this.addItem({title});
     event.target.value = '';
+  }
+  addItem(properties) {
+    this.lastComponent = new TodoItem({preceding: this.lastComponent, ...properties});
+    this.append(this.lastComponent);
   }
   toggleElements() {
     const complete = !!this.nActive;
@@ -98,24 +120,26 @@ export class TodoItem extends RuledElement {
     this.$('input').checked = this.completed;
     return this.toggleState('active', !this.completed);
   }
-  get index() { return 1 + (this.preceding?.index || 0); }
+  get count() { return 1 + (this.preceding?.count || 0); }
   get nActive() { return (this.completed ? 0 : 1) + (this.preceding?.nActive || 0); }
   get title() { return ''; }
   get titleEffect() { return this.label.textContent = this.title; }
+  get storedEffect() { return app.save(this.count - 1, {title: this.title, completed: this.completed}); }
   remove() {
     let next = this.nextElementSibling;
     if (next) next.preceding = this.preceding;                // Fix the next.preceding to hop over us.
     else app.listComponent.lastComponent = this.preceding;   // We are no longer the lastComponent.
+    app.delete(this.count - 1);
     super.remove();
   }
   get template() {
     return `
      <li>
       <input type="checkbox" onchange="hostElement(event).completed = event.target.checked"></input>
-      <label contenteditable oninput="hostElement(event).title = event.target.textContent"></label>
+      <span contenteditable oninput="hostElement(event).title = event.target.textContent"></spanl>
       <button onclick="hostElement(event).remove()">X</button>
      </li>`;
   }
-  get label() { return this.$('label'); }
+  get label() { return this.$('span'); }
 }
 TodoItem.register();
