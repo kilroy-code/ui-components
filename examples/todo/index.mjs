@@ -8,21 +8,24 @@ import { RuledElement } from '@kilroy-code/ruled-components';
 export class TodoApp extends RuledElement {
   get template() {
     return `
-      <todo-entry></todo-entry>
-      <todo-list></todo-list>
-      <footer>
-        <span></span>
-        <span>
-          <label><input type="radio" name="filter" onchange="hostElement(event).changeFilter(event)" value="All"/>All</label>
-          <label><input type="radio" name="filter" onchange="hostElement(event).changeFilter(event)" value="Active"/>Active</label>
-          <label><input type="radio" name="filter" onchange="hostElement(event).changeFilter(event)" value="Completed"/>Completed</label>
-        </span>
-        <button onclick="hostElement(event).clear()">Clear completed</button>
-      </footer>
-     `;
+      <section>
+	<todo-entry></todo-entry>
+	<todo-list></todo-list>
+	<footer>
+	  <span></span>
+	  <span>
+	    <label><input type="radio" name="filter" onchange="hostElement(event).changeFilter(event)" value="All"/>All</label>
+	    <label><input type="radio" name="filter" onchange="hostElement(event).changeFilter(event)" value="Active"/>Active</label>
+	    <label><input type="radio" name="filter" onchange="hostElement(event).changeFilter(event)" value="Completed"/>Completed</label>
+	  </span>
+	  <button onclick="hostElement(event).clear()">Clear completed</button>
+	</footer>
+     </section>`;
   }
   get styles() {
     return `
+      section { background: white; margin-bottom: 40px; box-shadow: 0 2px 4px 0 rgba(0,0,0,.2),0 25px 50px 0 rgba(0,0,0,.1); }
+      todo-entry { display: block; }
       todo-item { display: none; }
       todo-list:state(showingActive) todo-item:state(active) { display: block; }
       todo-list:state(showingCompleted) todo-item:not(:state(active)) { display: block; }
