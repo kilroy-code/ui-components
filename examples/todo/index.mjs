@@ -5,8 +5,8 @@ import { RuledElement } from '@kilroy-code/ruled-components';
   styling
  */
 
-export class TodoApp extends RuledElement {
-  get template() {
+export class TodoApp extends RuledElement {  // The top-level element of the app.
+  get template() { // The private HTML inside this element.
     return `
       <section>
 	<todo-entry></todo-entry>
@@ -22,14 +22,15 @@ export class TodoApp extends RuledElement {
 	</footer>
      </section>`;
   }
-  get styles() {
+  get styles() { // The private styling for our template.
     return `
       section { background: white; margin-bottom: 40px; box-shadow: 0 2px 4px 0 rgba(0,0,0,.2),0 25px 50px 0 rgba(0,0,0,.1); }
       todo-entry { display: block; }
       todo-item { display: none; }
       todo-list:state(showingActive) todo-item:state(active) { display: block; }
       todo-list:state(showingCompleted) todo-item:not(:state(active)) { display: block; }
-      footer > button { display: none; }
+      footer, footer > button { display: none; }
+      :host(:state(anyItems)) footer { display: block; }
       :host(:state(anyCompleted)) footer > button { display: block; }
     `;
   }
@@ -46,6 +47,7 @@ export class TodoApp extends RuledElement {
   }
   get listComponent() { return this.$('todo-list'); }
   get anyCompletedEffect() { return this.toggleState('anyCompleted', this.listComponent.nCompleted); }
+  get anyItemsEffect() { return this.toggleState('anyItems', this.listComponent.nItems); }
   initialize() {
     super.initialize();
     const read = key => JSON.parse(localStorage.getItem(key)),
@@ -65,7 +67,7 @@ export class TodoApp extends RuledElement {
   }
   delete(key) { localStorage.removeItem(key); }
 }
-TodoApp.register();
+TodoApp.register(); // Does two things: 1) Defines an HTML Element named todo-app (following rules for WebComponents). 2) Tracks dependencies on every get definition.
 
 
 export class TodoEntry extends RuledElement {
@@ -75,19 +77,31 @@ export class TodoEntry extends RuledElement {
       <button onclick="hostElement(event).listComponent.toggleElements()">V</button>
       <input placeholder="What needs to be done?" autofocus onchange="hostElement(event).listComponent.addEntry(event)" />`;
   }
+  get styles() {
+    return `
+      input::placeholder { font-style: italic; }
+      input { height: 65px; font: 300 24px "Helvetica Neue", Helvetica, Arial, sans-serif; width: calc(100% - 16px - 60px); padding: 16px 16px 16px 60px; border: none; }
+    `;
+  }
 }
 TodoEntry.register();
 
 
 export class TodoList extends RuledElement {
   get template() { return `<ul><slot/></ul>`; }
+  get styles() {
+    return `
+       ul { list-style: none; padding: 0; font-size: 24px; font-weight: 400; }
+    `;
+  }
   get listElement() { return this.$('ul'); }
   get statusElement() { return app.$('span'); }
   get lastComponent() { return null; }
   get lastComponentEffect() { return app.save('n', this.lastComponent?.count || 0); }
+  get nItems() { return this.lastComponent?.count || 0; }
   get nActive() { return this.lastComponent?.nActive || 0; }
   get nActiveEffect() { return this.statusElement.textContent = this.nActive === 1 ? '1 item left' : `${this.nActive} items left`; }
-  get nCompleted() { return (this.lastComponent?.count || 0) - this.nActive; }
+  get nCompleted() { return this.nItems - this.nActive; }
   get showingActive() { return true; }
   get showingActiveEffect() { return this.toggleState('showingActive', this.showingActive); }
   get showingCompleted() { return true; }
