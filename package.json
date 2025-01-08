@@ -1,0 +1,34 @@
+{
+  "name": "@kilroy-code/ui-components",
+  "version": "0.0.1",
+  "description": "Elegant but powerful app and UI framework based on automatic dependency-directed-backtracking, web components, and material design.",
+  "main": "index.mjs",
+  "directories": {
+    "example": "examples"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kilroy-code/ui-components.git"
+  },
+  "keywords": [
+    "UI",
+    "UX",
+    "Material",
+    "Design",
+    "reactive",
+    "properties",
+    "web",
+    "components",
+    "dependency-directed",
+    "backtracking"
+  ],
+  "author": "howard-stearns",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/kilroy-code/ui-components/issues"
+  },
+  "homepage": "https://github.com/kilroy-code/ui-components#readme"
+}
