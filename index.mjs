@@ -1,4 +1,4 @@
-export { App, MDElement, ListItems, MenuButton } from './components.js';
+export { App, MDElement, ListItems, MenuButton } from './components.mjs';
 
 
 
