@@ -184,34 +184,68 @@ export class ListTransform extends MDElement {
   getViewTagChildren() { // Fresh list each time.
     return Array.from(this.children).filter(child => child.dataset.hasOwnProperty('key'));
   }
+  findFrom(key, items, start) {
+    for (let i = start; i < items.length; i++) {
+      if (items[i].dataset.key === key) return items[i];
+    }
+    return null;
+  }
+  createNewItem(key) {
+    const insert = document.createElement(this.viewTag);
+    insert.setAttribute('slot', 'transformer');
+    insert.model = this.getModel(key);
+    insert.dataset.key = insert.view.dataset.key = key;
+    console.log('create', insert, insert.view);
+    return insert;
+  }
   setKeys(keys) { // Adds or removes viewTag elements to maintain ordered correspondence with keys.
-    let items = this.getViewTagChildren(),
-	toRemove = items.filter(item => !keys.includes(item.dataset.key));
-    toRemove.slice().forEach(item => {
-      item.view?.remove();
-      item.remove();
-    });
-    items = this.getViewTagChildren();
-    for (let keysIndex = 0, itemsIndex = 0; keysIndex < keys.length; keysIndex++) {
-      const key = keys[keysIndex],
-	    item = items[itemsIndex];
-      if (item?.dataset.key === key) {
-	//console.log(this.tagName, key, 'exists', item);
-	itemsIndex++;
-      } else {
-	const insert = document.createElement(this.viewTag);
-	insert.setAttribute('slot', 'transformer');
-	insert.model = this.getModel(key);
-	insert.dataset.key = insert.view.dataset.key = key;
-	//console.log(this.tagName, 'insert', key, insert, insert.model);
-	if (item) {
-	  item.before(insert);
-	  this.itemParent.children[itemsIndex].before(insert.view);
-	} else {
-	  this.append(insert);
-	  this.itemParent.append(insert.view);
-	}
+    const items = this.children; // A live collection that changes as elements are added/removed.
+    let keyIndex = 0; // Outside the loop. We may get to the end of items and still have keys to add.
+    console.log(this.tagName, 'setKeys', keys);
+    for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
+      const item = items[itemIndex],
+	    itemKey = item.dataset.key;
+      console.log({itemIndex, keyIndex, item, itemKey});
+      if (!itemKey) continue; // Don't touch.
+
+      // Remove if not in keys.
+      if (!keys.includes(itemKey)) {
+	item.remove();
+	item.view.remove();
+	itemIndex--;
+	continue;
       }
+      const key = keys[keyIndex];
+
+      // Leave it if it matches at this position.
+      if (itemKey === key) {
+	keyIndex++;
+	continue;
+      }
+
+      // If key is found later in children, move it to here.
+      let later = this.findFrom(key, items, itemIndex + 1);
+      if (later) {
+	item.before(later);
+	item.view.before(later.view);
+	keyIndex++;
+	continue;
+      }
+
+      // Insert new item.
+      const insert = this.createNewItem(key);
+      item.before(insert);
+      item.view.before(insert.view);
+      keyIndex++;
+    }
+    // Now add any remaining keys at end.
+    while (keyIndex < keys.length) {
+      const key = keys[keyIndex],
+	    insert = this.createNewItem(key);
+      console.log({keyIndex, key, insert});
+      keyIndex++;
+      this.append(insert);
+      this.itemParent.append(insert.view);
     }
     return keys;
   }
