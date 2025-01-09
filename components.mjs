@@ -271,7 +271,9 @@ export class ListItem extends ViewTransform {
     return `<md-list-item></md-list-item>`;
   }
   get titleEffect() {
-    return this.view.textContent = this.view.dataset.key = this.model?.title;
+    const title = this.model?.title;
+    this.view.dataset.key = title;
+    return this.view.textContent = title || '...'; // If model hasn't arrived yet.
   }
 }
 ListItem.register();
