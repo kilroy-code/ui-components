@@ -181,8 +181,8 @@ export class ListTransform extends MDElement {
     console.warn(`Please specifify a viewTag for ${this.title}.`);
     return '';
   }
-  getViewTagChildren() { // Fresh list each time.
-    return Array.from(this.children).filter(child => child.dataset.hasOwnProperty('key'));
+  get transformers() { // Handy for finding things among transformers, and knowing if it has changed.
+    return Array.from(this.children).filter(item => item.dataset.key !== undefined);
   }
   findFrom(key, items, start) {
     for (let i = start; i < items.length; i++) {
@@ -193,25 +193,29 @@ export class ListTransform extends MDElement {
   createNewItem(key) {
     const insert = document.createElement(this.viewTag);
     insert.setAttribute('slot', 'transformer');
-    insert.model = this.getModel(key);
+    const model = this.getModel(key);
+    if (model?.then) { // A Promise
+      model.then(model => insert.model = model);
+    } else {
+      insert.model = model;
+    }
     insert.dataset.key = insert.view.dataset.key = key;
-    console.log('create', insert, insert.view);
     return insert;
   }
   setKeys(keys) { // Adds or removes viewTag elements to maintain ordered correspondence with keys.
     const items = this.children; // A live collection that changes as elements are added/removed.
     let keyIndex = 0; // Outside the loop. We may get to the end of items and still have keys to add.
-    console.log(this.tagName, 'setKeys', keys);
+    let change = false;
     for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
       const item = items[itemIndex],
 	    itemKey = item.dataset.key;
-      console.log({itemIndex, keyIndex, item, itemKey});
       if (!itemKey) continue; // Don't touch.
 
       // Remove if not in keys.
       if (!keys.includes(itemKey)) {
 	item.remove();
 	item.view.remove();
+	change = true;
 	itemIndex--;
 	continue;
       }
@@ -229,6 +233,7 @@ export class ListTransform extends MDElement {
 	item.before(later);
 	item.view.before(later.view);
 	keyIndex++;
+	change = true;
 	continue;
       }
 
@@ -236,16 +241,21 @@ export class ListTransform extends MDElement {
       const insert = this.createNewItem(key);
       item.before(insert);
       item.view.before(insert.view);
+      change = true;
       keyIndex++;
     }
     // Now add any remaining keys at end.
     while (keyIndex < keys.length) {
       const key = keys[keyIndex],
 	    insert = this.createNewItem(key);
-      console.log({keyIndex, key, insert});
       keyIndex++;
       this.append(insert);
       this.itemParent.append(insert.view);
+      change = true;
+    }
+    if (change) {
+      // Allow dependencies to be registired before we start breaking them.
+      setTimeout(() => this.transformers = undefined);
     }
     return keys;
   }
@@ -299,7 +309,6 @@ export class MenuItem extends ViewTransform {
   get titleEffect() { // If model.title changes, update ourself in place (wherever we may appear).
     const headline = this.view.querySelector('[slot="headline"]'),
 	  title = this.model?.title || '';
-    if (title === 'H') console.log({title, headline});
     this.view.dataset.key = title;
     if (!headline) return title;
     return headline.textContent = title;
@@ -471,13 +480,11 @@ export class BasicApp extends MDElement {
     // Answers true if there is a change.
     const previous = this.url.href, // Before this change.
 	  next = this.urlWith(parameters);
-    //console.log('resetUrl from:', previous, 'to:', next.href, parameters);
     if (previous === next.href) return false;
     this.url = new URL(next);
     if (!updateHistory) return true;
     const params = Object.fromEntries(next.searchParams.entries());
     params.screen = next.hash.slice(1);
-    //console.log('pushState', params);
     history.pushState(params, this.title, next.href);
     return true;
   }
@@ -508,11 +515,9 @@ export class BasicApp extends MDElement {
     return script;
   }
   onhashchange() { // Set current screen to that defined by the hash.
-    //console.log('onhashchange', location.hash);
     this.resetUrl({screen: location.hash.slice(1)}, false);
   }
   onpopstate(event) {
-    //console.log('onpopstate', location.href, event.state);
     if (event.state) this.resetUrl(event.state, false);
   }
   afterInitialize() {
@@ -635,7 +640,6 @@ export class SwitchUser extends ListTransform { // A submenu populated from setK
     return App?.url.searchParams.get('user') || this.myUsers[0] || '';
   }
   get userEffect() {
-    //console.log(`user set to ${this.user} among ${this.myUsers}. FIXME: Set user button image; distinguish in our menu.`);
     App.resetUrl({user: this.user});
     return true;
   }
