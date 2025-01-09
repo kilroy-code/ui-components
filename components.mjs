@@ -171,7 +171,8 @@ export class ListTransform extends MDElement {
   get modelsEffect() {
     if (!this.models.length) return false;
     let keys = this.models.map(model => model.title);
-    return this.setKeys(keys);
+    this.setKeys(keys);
+    return true;
   }
   getModel(key) {
     return this.models.find(model => model.dataset.key === key) || {title: key};
@@ -195,12 +196,14 @@ export class ListTransform extends MDElement {
       const key = keys[keysIndex],
 	    item = items[itemsIndex];
       if (item?.dataset.key === key) {
+	//console.log(this.tagName, key, 'exists', item);
 	itemsIndex++;
       } else {
 	const insert = document.createElement(this.viewTag);
 	insert.setAttribute('slot', 'transformer');
 	insert.model = this.getModel(key);
 	insert.dataset.key = insert.view.dataset.key = key;
+	//console.log(this.tagName, 'insert', key, insert, insert.model);
 	if (item) {
 	  item.before(insert);
 	  this.itemParent.children[itemsIndex].before(insert.view);
@@ -242,7 +245,7 @@ ListItem.register();
 export class ListItems extends ListTransform {
   // A list of items built from keys:
   // setKeys(array-of-keys) builds and maintains a set of ListItem children, where each child's model is getModel(key).
-  // Our shadowTree is an md-list, with each child being and view of each ListItem.
+  // Our shadowTree is an md-list, with each child being a view of each ListItem.
   get template() {
     return `<md-list></md-list><slot></slot>`;
   }
@@ -255,11 +258,12 @@ ListItems.register();
 
 export class MenuItem extends ViewTransform {
   get template() {
-    return this.model.copyContent || `<md-menu-item><div slot="headline"></div></md-menu-item>`;
+    return this.model?.copyContent || `<md-menu-item><div slot="headline"></div></md-menu-item>`;
   }
   get titleEffect() { // If model.title changes, update ourself in place (wherever we may appear).
     const headline = this.view.querySelector('[slot="headline"]'),
 	  title = this.model?.title || '';
+    if (title === 'H') console.log({title, headline});
     this.view.dataset.key = title;
     if (!headline) return title;
     return headline.textContent = title;
@@ -599,13 +603,14 @@ export class SwitchUser extends ListTransform { // A submenu populated from setK
     App.resetUrl({user: this.user});
     return true;
   }
-  get myUsers() {
+  get myUsers() { // List of alts. Initially from local storage and then set when adding accounts.
     let found = JSON.parse(localStorage.getItem('myUsers') || '[]'); //fixme? "Alice", "Bob", "Carol"]');
     return found;
   }
-  get myUsersEffect() {
+  get myUsersEffect() { // Update the local storage and setkeys() hwen the myUsers changes.
     localStorage.setItem('myUsers', JSON.stringify(this.myUsers));
-    return this.setKeys(this.myUsers);
+    this.setKeys(this.myUsers);
+    return true;
   }
   afterInitialize() {
     super.afterInitialize();
@@ -679,25 +684,23 @@ export class UserProfile extends MDElement {
   get usernameElement() {
     return this.shadow$('[label="user name"]');
   }
+  get submitElement() {
+    return this.shadow$('[type="submit"]');
+  }
   get username() {
     return this.usernameElement.value;
   }
   get tag() {
-    return App.toLowerCase(this.username);
+    return this.username; // FIXME: App.toLowerCase(this.username);
   }
   get existenceCheck() {
     if (!this.tag) return false;
     return fetch(`/persist/user/${this.tag}.json`);
   }
   get exists() {
-    return this.existenceCheck?.status === 200;
+    return this.existenceCheck?.ok;
   }
-  get existsEffect() {
-    if (!this.exists) return true;
-    let user = this.username;
-    return App.confirm(`If this is you, would you like to authorize ${user} for this browser?`,
-		       "User already exists").then(response => response === 'ok' && App.resetUrl({screen: "Add user", user}));
-  }
+  /*
   get profile() {
     return null;
   }
@@ -710,31 +713,70 @@ export class UserProfile extends MDElement {
     const profile = Object.assign({}, this.profile, {picture: undefined}),
 	  {username} = profile,
 	  path = `/persist/user/${this.tag}.json`;
-    console.log({unclean:this.profile, profile, path});
     fetch(path, {
       body: JSON.stringify(profile),
       method: 'POST',
       headers: {"Content-Type": "application/json"}
     });
-    /*
-    const dialog = this.shadow$('dialog'),
-	  anyQuestionSet = this.shadow$('security-question-selection');
-    ['q0', 'q1', 'q2'].forEach(name => {
-      const textField = dialog.querySelector('md-outlined-text-field'),
-	    selectedValue = this.profile[name],
-	    selectedQuestion = anyQuestionSet.querySelector(`md-select-options[value="${selectedValue}"]`);
-      console.log(name, selectedValue, selectedQuestion, textField);
-      // textField.setAttribute('label',
-    });*/
+    // const dialog = this.shadow$('dialog'),
+    // 	  anyQuestionSet = this.shadow$('security-question-selection');
+    // ['q0', 'q1', 'q2'].forEach(name => {
+    //   const textField = dialog.querySelector('md-outlined-text-field'),
+    // 	    selectedValue = this.profile[name],
+    // 	    selectedQuestion = anyQuestionSet.querySelector(`md-select-options[value="${selectedValue}"]`);
+    //   console.log(name, selectedValue, selectedQuestion, textField);
+    //   // textField.setAttribute('label',
+    // });
     return true;
+  }
+  */
+  setUsernameValidity(message) {
+    this.usernameElement.setCustomValidity(message);
+    this.usernameElement.reportValidity(); // Alas, it doesn't display immediately.
+    if (message) this.submitElement.setAttribute('disabled', 'disabled');
+    else this.submitElement.removeAttribute('disabled');
+    return !message;
+  }
+  async checkUsernameAvailable() { // Returns true if available.
+    this.username = undefined;
+    if (!await this.exists) return this.setUsernameValidity('');
+    this.setUsernameValidity("Already exists");
+    console.warn(`${this.username} already exists.`);
+    return false;
   }
   afterInitialize() {
     super.afterInitialize();
     this.shadow$('avatar-jdenticon').model = this;
-    this.usernameElement.addEventListener('input', () => this.username = undefined);
+    this.usernameElement.addEventListener('input', () => {
+      this.checkUsernameAvailable();
+    });
+    this.usernameElement.addEventListener('change', async () => {
+      if (await this.checkUsernameAvailable()) return;
+      const user = this.username,
+	    response = await App.confirm(`If this is you, would you like to authorize ${user} for this browser?`,
+					 "User already exists");
+      if (response === 'ok') App.resetUrl({screen: "Add user", user});
+    });
     this.shadow$('md-outlined-button').onclick = () => this.shadow$('[type="file"]').click();
-    this.shadow$('form').addEventListener('submit', event => {
-      this.profile = Object.fromEntries(new FormData(event.target));
+    this.shadow$('form').addEventListener('submit', async event => {
+      if (!await this.checkUsernameAvailable()) return null;
+      const path = `/persist/user/${this.tag}.json`,
+	    key = Math.random().toString(),
+	    description = this.shadow$('[label="description"]').value,
+	    profile = {title: this.username, description, key},
+	    myUsers = App?.switchUserScreen?.myUsers,
+	    stored = await fetch(path, {
+	      body: JSON.stringify(profile),
+	      method: 'POST',
+	      headers: {"Content-Type": "application/json"}
+	    });
+      if (!stored.ok) return console.error(stored.statusText);
+      localStorage.setItem(this.tag, key);
+      myUsers.push(this.tag);
+      App?.switchUserScreen?.set('myUsers', myUsers);
+      App?.resetUrl({user: this.tag});
+      //this.profile = Object.fromEntries(new FormData(event.target));
+      return null;
     });
   }
   get template() {
@@ -809,13 +851,13 @@ export class AddUser extends MDElement {
   get template() {
     return `
       <p>Authorize <user-chooser></user-chooser> on this machine.</p>
+      <p>Right now, this just authorizes every request. Yes, you can steal someone's account right now! <b>Please don't.</b></p>
       <p>
-        This will give the user a choice (if applicable):
+        Later on, this will give the user a choice (if applicable):
         <ol>
           <li>Answering their security questions</li>
           <li>Sending a message to the app already installed on another device or browser, asking them to confirm authorization.</li>
         </ol>
-      Neither of those are implemented yet, and this placeholder always succeeds. (Yes, you can steal someone's account right now!)
       </p>
     `;
   }
@@ -856,10 +898,9 @@ export class UserChooser extends ChooserButton {
   }
   afterInitialize() {
     super.afterInitialize();
-    console.log('fetching');
     fetch(`/persist/user/list.json`)
-      .then(response => {console.log(response); return response.json();})
-      .then(json => {console.log('got json:', json); this.setKeys(json); });
+      .then(response => response.json())
+      .then(json => this.setKeys(json)); // FIXME: when can/should this be re-run?
   }
 }
 UserChooser.register();
