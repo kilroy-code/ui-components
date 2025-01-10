@@ -155,8 +155,10 @@ export class ViewTransform extends MDElement { // TODO: Unify this with Attached
   get content() { // Instead of a shadow dom tree, just answer a template element
     return this.fromHTML('template', this.template);
   }
-  get view() {
-    return this.content.content.firstElementChild; // First content is rule to get template, second gets dock fragment. No need to clone.
+  get view() { // We will find ourself a child of a ListTransform, and are responsible for keeping the parts of our view up to date.
+    // ListTransform.setKeys() is responsible for inserting our view into it's itemParent in the position that corresponds to us.
+    //return this.model?.viewable || this.content.content.firstElementChild; // First content is rule to get template, second gets dock fragment. No need to clone.
+    return this.content.content.firstElementChild; //fixme // First content is rule to get template, second gets dock fragment. No need to clone.
   }
 }
 ViewTransform.register();
@@ -192,14 +194,16 @@ export class ListTransform extends MDElement {
   }
   createNewItem(key) {
     const insert = document.createElement(this.viewTag);
+    insert.dataset.key = key;
     insert.setAttribute('slot', 'transformer');
+    // Each view transform is responsible for managing view.dataset.key
+    // fixme? insert.view.dataset.key = key; // insert.view demands a bunch of stuff
     const model = this.getModel(key);
     if (model?.then) { // A Promise
       model.then(model => insert.model = model);
     } else {
       insert.model = model;
     }
-    insert.dataset.key = insert.view.dataset.key = key;
     return insert;
   }
   setKeys(keys) { // Adds or removes viewTag elements to maintain ordered correspondence with keys.
@@ -301,10 +305,10 @@ export class ListItems extends ListTransform {
 }
 ListItems.register();
 
-
 export class MenuItem extends ViewTransform {
   get template() {
-    return this.model?.copyContent || `<md-menu-item><div slot="headline"></div></md-menu-item>`;
+    //return this.model?.copyContent || `<md-menu-item><div slot="headline"></div></md-menu-item>`; //fixme
+    return `<md-menu-item><div slot="headline"></div></md-menu-item>`; //fixme
   }
   get titleEffect() { // If model.title changes, update ourself in place (wherever we may appear).
     const headline = this.view.querySelector('[slot="headline"]'),
@@ -538,7 +542,7 @@ export class BasicApp extends MDElement {
       if (key === 'Firstuse') this.firstUseScreen?.set('seen', !this.firstUseScreen?.seen);
       if (isScreen) this.resetUrl({screen: key});
       // Unfortunately, I have not figured out how to intercept this at the submenu, so we need to trampoline.
-      else this.switchUserScreen?.set('user', key);
+      //fixme else this.switchUserScreen?.set('user', key);
     });
 
     // Initial state.
@@ -611,46 +615,44 @@ export class BasicApp extends MDElement {
 }
 BasicApp.register();
 
-// Bug: groups.setKey([]) causes it to dissappear from tabs.
-export class SwitchUser extends ListTransform { // A submenu populated from setKeys/getModel.
+export class SwitchUser extends ListItems {
   isSwitchUser = true;
-  get viewTag() {
-    return 'menu-item';
-  }
-  get titleEffect() {
-    return this.shadow$('md-sub-menu > md-menu-item[slot="item"] > div[slot="headline"]').textContent = this.title;
-  }
-  get template() {
-    return `
-      <md-sub-menu>
-        <md-menu-item slot="item">
-          <div slot="headline"></div>
-        </md-menu-item>
-        <md-menu slot="menu"></md-menu>
-      </md-sub-menu>
-    `;
-  }
-  get itemParent() { // Overrides the default (which is the first content child.
-    return this.shadow$('md-menu');
-  }
-  get copyContent() {
-    return this.content.innerHTML;
-  }
   get user() {
     return App?.url.searchParams.get('user') || this.myUsers[0] || '';
   }
+  get userElement() {
+    return this.transformers.find(item => item.dataset.key === this.user) || null;
+  }
+  get userModel() {
+    return this.userElement?.model || null;
+  }
+  get userModelEffect() {
+    if (!this.userModel) return false;
+    //fixme this.shareElement.picture = `images/${this.userModel.picture}`;
+    return true;
+  }
+  get shareElement() {
+    return document.body.querySelector('app-share');
+  }
   get userEffect() {
-    App.resetUrl({user: this.user});
+    if (App.resetUrl({user: this.user})) {
+      this.user = undefined; // Allow it to pick up new dependencies.
+      //fixme this.shareElement.url = App.urlWith({screen: 'Switch user', user: ''});
+    }    
     return true;
   }
+
+  localCollectionKey = 'myUsers';
   get myUsers() { // List of alts. Initially from local storage and then set when adding accounts.
-    let found = JSON.parse(localStorage.getItem('myUsers') || '[]'); //fixme? "Alice", "Bob", "Carol"]');
-    return found;
+    let storedString = localStorage.getItem(this.localCollectionKey),
+	users= JSON.parse(storedString || '[]'),
+	specifiedUser = App?.url.searchParams.get('user');
+    if (!users.includes(specifiedUser)) users.push(specifiedUser);
+    return users;
   }
-  get myUsersEffect() { // Update the local storage and setkeys() hwen the myUsers changes.
-    localStorage.setItem('myUsers', JSON.stringify(this.myUsers));
-    this.setKeys(this.myUsers);
-    return true;
+  get myUsersEffect() {
+    localStorage.setItem(this.localCollectionKey, JSON.stringify(this.myUsers));
+    return this.setKeys(this.myUsers);
   }
   afterInitialize() {
     super.afterInitialize();
@@ -813,7 +815,7 @@ export class UserProfile extends MDElement {
       if (!stored.ok) return console.error(stored.statusText);
       localStorage.setItem(this.tag, key);
       myUsers.push(this.tag);
-      App?.switchUserScreen?.set('myUsers', myUsers);
+      //fixme App?.switchUserScreen?.set('myUsers', myUsers);
       App?.resetUrl({user: this.tag});
       //this.profile = Object.fromEntries(new FormData(event.target));
       return null;
@@ -890,7 +892,7 @@ export class AddUser extends MDElement {
   isAddUser = true;
   get template() {
     return `
-      <p>Authorize <user-chooser></user-chooser> on this machine.</p>
+      <p>Authorize fixme <!-- <user-chooser></user-chooser>--> on this machine.</p>
       <p>Right now, this just authorizes every request. Yes, you can steal someone's account right now! <b>Please don't.</b></p>
       <p>
         Later on, this will give the user a choice (if applicable):
