@@ -113,8 +113,11 @@ export class AppShare extends MDElement {
   get picture() {
     return '';
   }
+  get description() {
+    return '';
+  }
   afterInitialize() {
-    this.shadow$('md-filled-button').onclick = () => navigator.share({url: this.url, title: App.title});
+    this.shadow$('md-filled-button').onclick = () => navigator.share({url: this.url, title: App.title, text: this.description});
   }
   get template() {
     return `
@@ -179,9 +182,15 @@ export class ListTransform extends MDElement {
   getModel(key) {
     return this.models.find(model => model.dataset.key === key) || {title: key};
   }
+  getCachedModel(key) {
+    return this.getTransformer(key)?.model;
+  }
   get viewTag() {
     console.warn(`Please specifify a viewTag for ${this.title}.`);
     return '';
+  }
+  getTransformer(key) {
+    return this.transformers.find(item => item.dataset.key === key);
   }
   get transformers() { // Handy for finding things among transformers, and knowing if it has changed.
     return Array.from(this.children).filter(item => item.dataset.key !== undefined);
@@ -414,6 +423,20 @@ export class BasicApp extends MDElement {
     super();
     App = window.App = this;
   }
+  getParameter(key) {
+    const stringOrNull = this.getUrlParameter(key);
+    if (!stringOrNull) return '';
+    return decodeURIComponent(stringOrNull);
+  }
+  get screen() { // The currently displayed screen.
+    return this.getParameter('screen');
+  }
+  get user() {
+    return this.getParameter('user');
+  }
+  getUserModel(key = this.user) {
+    this.switchUserScreen?.getCachedModel(key);
+  }
   get htmlElement() {
     return this.doc$('html');
   }
@@ -469,6 +492,10 @@ export class BasicApp extends MDElement {
   get url() { // location.href, as a URL. Instead of assigning this, call resetUrl.
     return new URL(location.href);
   }
+  getUrlParameter(key) {
+    if (key === 'screen') return this.url.hash.slice(1);
+    return this.url.searchParams.get(key);
+  }
   urlWith(parameters) { // Answer a copy of url with parameters set appropriately. (E.g. screen => hash, and everything else in query params.)
     const url = new URL(this.url.href);
     for (const key in parameters) {
@@ -491,9 +518,6 @@ export class BasicApp extends MDElement {
     params.screen = next.hash.slice(1);
     history.pushState(params, this.title, next.href);
     return true;
-  }
-  get screen() { // The currently displayed screen.
-    return decodeURIComponent(this.url.hash.slice(1));
   }
   get screenEffect() { // Recononicalize url and screen.
     this.resetUrl({screen: this.screen});
@@ -821,22 +845,26 @@ export class UserProfile extends MDElement {
       return null;
     });
   }
+  get formId() {
+    return this.title;
+  }
   get template() {
     return `
 	  <section>
 	    <slot name="headline" slot="headline"></slot>
-	    <form method="dialog" slot="content" id="form">
+	    <form method="dialog" slot="content" id="${this.formId}">
               <slot></slot>
               <md-outlined-text-field required
                    autocapitalize="words"
                    autocomplete="username"
                    minlength="1" maxlength="60"
-                   label="user name" name="username"
+                   label="user name"
+                   name="username"
                    placeholder="visible to others"></md-outlined-text-field>
               <div class="avatar">
 		<div>
 		  Avatar
-		  <md-outlined-button disabled>Use photo <i>not implemented</i></md-outlined-button>
+		  <md-outlined-button disabled name="pictureDriver">Use photo <i>not implemented</i></md-outlined-button>
 		  <input type="file" capture="user" accept="image/*" name="picture"></input>
 		</div>
 		<avatar-jdenticon></avatar-jdenticon>
@@ -852,18 +880,12 @@ export class UserProfile extends MDElement {
              <security-question-selection></security-question-selection>-->
 	    </form>
 	    <div slot="actions">
-              <md-filled-button type="submit" form="form"> <!-- cannot be a fab -->
+              <md-filled-button type="submit" form="${this.formId}"> <!-- cannot be a fab -->
                  Go
                  <material-icon slot="icon">login</material-icon>
               </md-filled-button>
 	    </div>
 	  </section>
-          <dialog>
-            <div slot="content">
-              <md-outlined-text-field>
-              <md-outlined-text-field>
-            </div>
-          </dialog>
      `;
   }
   get styles() {
