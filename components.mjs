@@ -671,7 +671,7 @@ export class SwitchUser extends ListItems {
     let storedString = localStorage.getItem(this.localCollectionKey),
 	users= JSON.parse(storedString || '[]'),
 	specifiedUser = App?.url.searchParams.get('user');
-    if (!users.includes(specifiedUser)) users.push(specifiedUser);
+    if (specifiedUser && !users.includes(specifiedUser)) users.push(specifiedUser);
     return users;
   }
   get myUsersEffect() {
