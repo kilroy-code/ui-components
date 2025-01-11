@@ -105,7 +105,8 @@ export class RuledElement extends HTMLElement {
     // 2. To skip looking in the local node, supply node:this.parentElement.
     //    This is common in a rule that uses this method. Note that an attribute will override the rule.
     attributeName ||= this.toKebabCase(propertyName, lang);
-    if (node[propertyName] !== '') return node[propertyName];
+    const propertyValue = node[propertyName];
+    if (propertyValue !== '' && propertyValue !== undefined) return node[propertyName];
     if (node.hasAttribute(attributeName)) return node.getAttribute(attributeName);
     if (node.parentElement) return this.getAttributeOrPropertyInAncestors({attributeName, lang, propertyName, node: node.parentElement});
     return undefined;

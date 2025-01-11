@@ -319,6 +319,20 @@ export class ListItems extends ListTransform {
   // A list of items built from keys:
   // setKeys(array-of-keys) builds and maintains a set of ListItem children, where each child's model is getModel(key).
   // Our shadowTree is an md-list, with each child being a view of each ListItem.
+  get urlKey() {
+    return '';
+  }
+  onSelection(key) {
+    this.urlKey && App.resetUrl({[this.urlKey]: key});
+  }
+  onClick(event) {
+    this.onSelection(this.getAttributeOrPropertyInAncestors({attributeName: 'data-key',
+							     node: event.target}));
+  }
+  afterInitialize() {
+    super.afterInitialize();
+    this.shadow$('md-list').addEventListener('click', event => this.onClick(event));
+  }
   get template() {
     return `<md-list></md-list><slot></slot>`;
   }
@@ -519,6 +533,9 @@ export class BasicApp extends MDElement {
   get firstUseScreen() {
     return this.findScreen('isFirstUse');
   }
+  get avatarElement() {
+    return this.shadow$('#user img');
+  }
   get url() { // location.href, as a URL. Instead of assigning this, call resetUrl.
     return new URL(location.href);
   }
@@ -623,10 +640,8 @@ export class BasicApp extends MDElement {
     </menu-button>
     <span>${this.title}<span class="screen-label"></span></span>
     <menu-tabs></menu-tabs>
-    <menu-button id="user" has-overflow>
-      <md-icon-button>
-         <material-icon>account_circle</material-icon>
-      </md-icon-button>
+    <menu-button id="user">
+     <img class="avatar"/>
     </menu-button>
   </header>
   <main>
@@ -653,6 +668,12 @@ export class BasicApp extends MDElement {
     align-items: center;
     gap: 10px;
   }
+  .avatar {
+    border-radius: 50%;
+    height: var(--avatar-size, 40px);
+    width:  var(--avatar-size, 40px);
+   }
+
   header > menu-tabs {
     --md-primary-tab-container-color: var(--md-sys-color-primary-container);
     --md-primary-tab-active-indicator-color: var(--md-sys-color-on-primary-container);
@@ -682,7 +703,7 @@ export class SwitchUser extends ListItems {
   }
   get userModelEffect() {
     if (!this.userModel) return false;
-    //fixme this.shareElement.picture = `images/${this.userModel.picture}`;
+    App.avatarElement.src = App.getUserPictureURL();
     return true;
   }
   get shareElement() {
@@ -694,6 +715,9 @@ export class SwitchUser extends ListItems {
       //fixme this.shareElement.url = App.urlWith({screen: 'Switch user', user: ''});
     }    
     return true;
+  }
+  get urlKey() {
+    return 'user';
   }
 
   localCollectionKey = 'myUsers';
