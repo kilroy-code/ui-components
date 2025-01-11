@@ -435,7 +435,14 @@ export class BasicApp extends MDElement {
     return this.getParameter('user');
   }
   getUserModel(key = this.user) {
-    this.switchUserScreen?.getCachedModel(key);
+    return this.switchUserScreen?.getCachedModel(key);
+  }
+  getPictureURL(filename) {
+    if (!filename) return '';
+    return `images/${filename}`; // A reasonable arrangement, but apps will likely override.
+  }
+  getUserPictureURL(key = this.user) {
+    return this.getPictureURL(this.getUserModel(key)?.picture);
   }
   get htmlElement() {
     return this.doc$('html');
