@@ -316,8 +316,7 @@ ListItems.register();
 
 export class MenuItem extends ViewTransform {
   get template() {
-    //return this.model?.copyContent || `<md-menu-item><div slot="headline"></div></md-menu-item>`; //fixme
-    return `<md-menu-item><div slot="headline"></div></md-menu-item>`; //fixme
+    return this.model?.copyContent || `<md-menu-item><div slot="headline"></div></md-menu-item>`; //fixme
   }
   get titleEffect() { // If model.title changes, update ourself in place (wherever we may appear).
     const headline = this.view.querySelector('[slot="headline"]'),
