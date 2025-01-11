@@ -1,5 +1,5 @@
 import { Rule } from '@kilroy-code/rules';
-const {customElements} = window; // Defined by browser.
+const {customElements, getComputedStyle} = window; // Defined by browser.
 
 export function hostElement(event) { // Returns the custom element that an event handler is attached to.
   return event.target.getRootNode().host;

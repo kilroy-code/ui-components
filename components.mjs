@@ -291,12 +291,26 @@ ListDivider.register();
 
 export class ListItem extends ViewTransform {
   get template() {
-    return `<md-list-item></md-list-item>`;
+    return `
+       <md-list-item>
+         <div slot="headline"></div>
+         <img slot="start" class="avatar"/>
+       </md-list-item>`;
   }
   get titleEffect() {
     const title = this.model?.title;
     this.view.dataset.key = title;
-    return this.view.textContent = title || '...'; // If model hasn't arrived yet.
+    return this.headlineElement.textContent = title || '...'; // If model hasn't arrived yet.
+  }
+  get headlineElement() {
+    return this.view.querySelector('[slot="headline"]');
+  }
+  get imgElement() {
+    return this.view.querySelector('img');
+  }
+  get pictureEffect() {
+    this.imgElement?.setAttribute('src', App.getPictureURL(this.model?.picture));
+    return true;
   }
 }
 ListItem.register();
@@ -310,6 +324,16 @@ export class ListItems extends ListTransform {
   }
   get viewTag() {
     return 'list-item';
+  }
+  get styles() {
+    return `
+      .avatar[src=""] {display: none; }
+      .avatar {
+        border-radius: 50%;
+        height: var(--avatar-size, 40px);
+        width:  var(--avatar-size, 40px);
+      }
+    `;
   }
 }
 ListItems.register();
