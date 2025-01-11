@@ -690,59 +690,48 @@ export class BasicApp extends MDElement {
 }
 BasicApp.register();
 
-export class SwitchUser extends ListItems {
-  isSwitchUser = true;
-  get user() {
-    return App?.url.searchParams.get('user') || this.myUsers[0] || '';
+export class ChoiceAmongLocallyStoredOptions extends ListItems {
+  get choice() {
+    return App?.url.searchParams.get(this.urlKey) || this.choices[0] || '';
   }
-  get userElement() {
-    return this.transformers.find(item => item.dataset.key === this.user) || null;
+  get choiceElement() {
+    return this.transformers.find(item => item.dataset.key === this.choice) || null;
   }
-  get userModel() {
-    return this.userElement?.model || null;
+  get choiceModel() {
+    return this.choiceElement?.model || null;
   }
-  get userModelEffect() {
-    if (!this.userModel) return false;
-    App.avatarElement.src = App.getUserPictureURL();
-    return true;
-  }
-  get shareElement() {
-    return document.body.querySelector('app-share');
-  }
-  get userEffect() {
-    if (App.resetUrl({user: this.user})) {
-      this.user = undefined; // Allow it to pick up new dependencies.
-      //fixme this.shareElement.url = App.urlWith({screen: 'Switch user', user: ''});
+  get choiceEffect() {
+    if (App.resetUrl({[this.urlKey]: this.choice})) {
+      this.choice = undefined; // Allow it to pick up new dependencies.
     }    
     return true;
   }
+
+  get localCollectionKey() { // key used for locally storing the list of keys
+    return `${this.urlKey}-choices`;
+  }
+  get choices() { // List of alts. Initially from local storage, and can then be explicity set.
+    let storedString = localStorage.getItem(this.localCollectionKey),
+	choices= JSON.parse(storedString || '[]'),
+	specifiedUser = App?.url.searchParams.get(this.urlKey);
+    if (specifiedUser && !choices.includes(specifiedUser)) choices.push(specifiedUser);
+    return choices;
+  }
+  get choicesEffect() {
+    localStorage.setItem(this.localCollectionKey, JSON.stringify(this.choices));
+    return this.setKeys(this.choices);
+  }
+}
+ChoiceAmongLocallyStoredOptions.register();
+export class SwitchUser extends ChoiceAmongLocallyStoredOptions {
+  isSwitchUser = true;
   get urlKey() {
     return 'user';
   }
-
-  localCollectionKey = 'myUsers';
-  get myUsers() { // List of alts. Initially from local storage and then set when adding accounts.
-    let storedString = localStorage.getItem(this.localCollectionKey),
-	users= JSON.parse(storedString || '[]'),
-	specifiedUser = App?.url.searchParams.get('user');
-    if (specifiedUser && !users.includes(specifiedUser)) users.push(specifiedUser);
-    return users;
-  }
-  get myUsersEffect() {
-    localStorage.setItem(this.localCollectionKey, JSON.stringify(this.myUsers));
-    return this.setKeys(this.myUsers);
-  }
-  afterInitialize() {
-    super.afterInitialize();
-    if (!App) console.warn("No App has been set for use by SwitchUser.");
-    if (!this.user) {
-      if (!this.myUsers.length) console.warn("No user has been set."); // Could be first time.
-      return;
-    }
-    if (!this.myUsers.includes(this.user)) {
-      if (!App.addUserScreen) console.warn("No AddUser facility.");
-      return;
-    }
+  get choiceModelEffect() {
+    if (!this.choiceModel) return false;
+    App.avatarElement.src = App.getUserPictureURL();
+    return true;
   }
 }
 SwitchUser.register();
@@ -884,7 +873,7 @@ export class UserProfile extends MDElement {
 	    key = Math.random().toString(),
 	    description = this.shadow$('[label="description"]').value,
 	    profile = {title: this.username, description, key},
-	    myUsers = App?.switchUserScreen?.myUsers,
+	    myUsers = App?.switchUserScreen?.choices,
 	    stored = await fetch(path, {
 	      body: JSON.stringify(profile),
 	      method: 'POST',
@@ -893,7 +882,7 @@ export class UserProfile extends MDElement {
       if (!stored.ok) return console.error(stored.statusText);
       localStorage.setItem(this.tag, key);
       myUsers.push(this.tag);
-      //fixme App?.switchUserScreen?.set('myUsers', myUsers);
+      App?.switchUserScreen?.set('choices', myUsers);
       App?.resetUrl({user: this.tag});
       //this.profile = Object.fromEntries(new FormData(event.target));
       return null;
