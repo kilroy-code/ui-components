@@ -110,6 +110,9 @@ export class RuledElement extends HTMLElement {
     if (node.parentElement) return this.getAttributeOrPropertyInAncestors({attributeName, lang, propertyName, node: node.parentElement});
     return undefined;
   }
+  getCSSVar(key) {
+    return getComputedStyle(this).getPropertyValue(key);
+  }
 
   fromHTML(tag, html) { // Return an element wrapped in tag.
     let element = document.createElement(tag);

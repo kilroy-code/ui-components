@@ -2,7 +2,7 @@ import { RuledElement } from './base.mjs';
 import { Rule } from '@kilroy-code/rules';
 import '@material/web/all.js';
 
-const {customElements, CustomEvent, URL, localStorage, getComputedStyle} = window; // Defined by browser.
+const {customElements, CustomEvent, URL, localStorage} = window; // Defined by browser.
 
 export let App;
 
@@ -27,8 +27,8 @@ export class AppQrcode extends MDElement {
   get data() { return (this.getRootNode().host.url || App?.url).href; }
   get picture() { return this.getRootNode().host.picture || ''; }
   get size() { return 300; }
-  get color() { return getComputedStyle(this).getPropertyValue("--md-sys-color-on-secondary-container"); }
-  get background() { return getComputedStyle(this).getPropertyValue("--md-sys-color-secondary-container"); }
+  get color() { return this.getCSSVar("--md-sys-color-on-secondary-container"); }
+  get background() { return this.getCSSVar("--md-sys-color-secondary-container"); }
   get dotsOptions() {
     return {
       color: this.color,
