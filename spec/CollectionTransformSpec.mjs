@@ -66,6 +66,7 @@ class Transform extends TestElement {
   // children of view. Here we roll all that up into one eager rule.
   get sideEffects() {
     this.view.title = this.model.title;
+    this.view.differentiator = this.getAttribute('slot');
     return this.view.dataset.key = this.dataset.key; // Our responsibility, not CollectionTransform.
   }
 }
@@ -74,8 +75,7 @@ tagMap['transform'] = Transform;
 
 class TestCollectionTransform extends CollectionTransform {
   get tags() { // A rule reflecting changes within the collection.
-    let known = this.collection.knownTags;
-    return known;
+    return this.collection.knownTags;
   }
   get sideEffects() {
     this.transformers.forEach(transform => transform.sideEffects);
@@ -84,54 +84,82 @@ class TestCollectionTransform extends CollectionTransform {
 }
 Rule.rulify(TestCollectionTransform.prototype, {eagerNames: ['sideEffects']});
 
-describe('CollectionTransform', function () {
-  let collection, collectionTransform;
-  function getRecord(tag) {
-    //return Promise.resolve({title: tag});
-    return {title: tag};
+class TestLiveCollectionTransform extends TestCollectionTransform {
+  get tags() {
+    return this.collection.liveTags;
   }
+}
+Rule.rulify(TestLiveCollectionTransform.prototype);
+
+describe('CollectionTransform', function () {
+  let collection, transforms = {};
   beforeAll(async function () {
     collection = new MutableCollection();
+    const transformerParent = new TestElement();
+    const viewParent = new TestElement();
+    const transformerTag = 'transform';
+    function createEmptyElement(tag) { return document.createElement(tag); }
+    function getRecord(tag) {
+      return Promise.resolve({title: tag});
+    }
+    async function getModel(tag) {
+      return Promise.resolve(new LiveRecord(await getRecord(tag)));
+    }
 
-    collectionTransform = new TestCollectionTransform();
-    collectionTransform.createEmptyElement = tag => document.createElement(tag);
-    collectionTransform.collection = collection;
-    collectionTransform.transformerParent = new TestElement();
-    collectionTransform.viewParent = new TestElement();
-    collectionTransform.transformerTag = 'transform';
-    collectionTransform.sideEffects;
-    
+
+    transforms.knownTags = new TestCollectionTransform();
+    Object.assign(transforms.knownTags, {collection, createEmptyElement, transformerParent, viewParent, transformerTag});
+    transforms.knownTags.sideEffects; // Even an eager rule must be demanded once to kick things off.
+
+    transforms.liveTags = new TestLiveCollectionTransform();
+    Object.assign(transforms.liveTags, {collection, createEmptyElement, transformerParent, viewParent, transformerTag,
+					slotName: 'live'});
+    transforms.liveTags.sideEffects;
+
     collection.updateKnownTags(['r1', 'one', 'r2', 'four', 'three', 'r3'], getRecord);
     await delay(100); // Allow a tick for things to be updated, as a more reprentative test.
     collection.updateKnownTags(['zero', 'one', 'two', 'three', 'four'], getRecord);
     await delay(); // Things won't update until the next tick.
+
+    collection.updateLiveTags(['five', 'three', 'six'], getModel);
+    await delay(100);
+    collection.updateLiveTags(['three', 'five'], getModel);
+    await delay();
+    //*/
   });
-  it('keeps transforms in correct order.', function () {
-    let transformers = collectionTransform.transformers;
-    ['zero', 'one', 'two', 'three', 'four'].forEach((tag, index) => {
-      const transformer = transformers[index];
-      expect(transformer.dataset.key).toBe(tag);
+  function check(label, expectedTags) {
+    describe(label, function () {
+      let collectionTransform;
+      beforeAll(function () {
+	collectionTransform = transforms[label];
+      });
+      it('keeps transforms in correct order.', function () {
+	let transformers = collectionTransform.transformers;
+	expectedTags.forEach((tag, index) => {
+	  const transformer = transformers[index];
+	  expect(transformer.dataset.key).toBe(tag);
+	});
+      });
+      it('keeps views in correct order.', function () {
+	let transformers = collectionTransform.transformers,
+	    views = collectionTransform.viewParent.children.filter(e => e.differentiator === collectionTransform.slotName);
+	expectedTags.forEach((tag, index) => {
+	  const transformer = transformers[index],
+		view = views[index];
+	  expect(view.dataset.key).toBe(tag);
+	  expect(view).toBe(transformer.view);
+	});
+      });
+      it('view properties are maintained.', function () {
+	let transformers = collectionTransform.transformers;
+	expectedTags.forEach((tag, index) => {
+	  const transformer = transformers[index];
+	  expect(transformer.model.title).toBe(tag); // In this case, where records define title === tag.
+	  expect(transformer.view.title).toBe(transformer.model.title);
+	});
+      });
     });
-  });
-  it('keeps views in correct order.', function () {
-    let transformers = collectionTransform.transformers,
-	views = collectionTransform.viewParent.children;
-    ['zero', 'one', 'two', 'three', 'four'].forEach((tag, index) => {
-      const transformer = transformers[index],
-	    view = views[index];
-      expect(view.dataset.key).toBe(tag);
-      expect(view).toBe(transformer.view);
-    });
-  });
-  it('view properties are maintained.', function () {
-    let transformers = collectionTransform.transformers;
-    ['zero', 'one', 'two', 'three', 'four'].forEach((tag, index) => {
-      const transformer = transformers[index];
-      expect(transformer.model.title).toBe(tag); // In this case, where records define title === tag.
-      expect(transformer.view.title).toBe(transformer.model.title);
-    });
-  });
-  // TODO: confirm that transformParent can have other children that are not the ones that we manage, and that these are not disturbed.
-  // TODO: confirm that transformerParent can have multiple CollectionTransforms if the slotName is different for each.
-  // TODO: confirm that viewParent can have other children than the ones that we manage (or that are managed by other CollectionTransforms).
+  }
+  check('knownTags', ['zero', 'one', 'two', 'three', 'four']);
+  check('liveTags', ['three', 'five']);
 });
