@@ -53,8 +53,8 @@ describe('TestElement', function () { // Test our TestElement harness
 });
 
 class Transform extends TestElement {
-  get model() {
-    return null;
+  get model() { // Must reference through collection[tag] so that it gets updated.
+    return this.collection[this.dataset.key];
   }
   get view() {
     return new TestElement();
@@ -65,9 +65,10 @@ class Transform extends TestElement {
   // This is usually done on a individual basis for view.textContent, view.setAttribute, or similarly for
   // children of view. Here we roll all that up into one eager rule.
   get sideEffects() {
-    this.view.title = this.model.title;
+    let tag = this.dataset.key;
+    this.view.title = this.model?.title || tag;
     this.view.differentiator = this.getAttribute('slot');
-    return this.view.dataset.key = this.dataset.key; // Our responsibility, not CollectionTransform.
+    return this.view.dataset.key = tag; // Our responsibility, not CollectionTransform.
   }
 }
 Rule.rulify(Transform.prototype, {eagerNames: ['sideEffects']});
@@ -93,17 +94,19 @@ Rule.rulify(TestLiveCollectionTransform.prototype);
 
 describe('CollectionTransform', function () {
   let collection, transforms = {};
+  let short = 10, long = 20;
   beforeAll(async function () {
     collection = new MutableCollection();
     const transformerParent = new TestElement();
     const viewParent = new TestElement();
     const transformerTag = 'transform';
     function createEmptyElement(tag) { return document.createElement(tag); }
-    function getRecord(tag) {
-      return Promise.resolve({title: tag});
+    async function getRecord(tag) {
+      await delay(short);
+      return {title: tag};
     }
     async function getModel(tag) {
-      return Promise.resolve(new LiveRecord(await getRecord(tag)));
+      return new LiveRecord(await getRecord(tag));
     }
 
 
@@ -117,15 +120,14 @@ describe('CollectionTransform', function () {
     transforms.liveTags.sideEffects;
 
     collection.updateKnownTags(['r1', 'one', 'r2', 'four', 'three', 'r3'], getRecord);
-    await delay(100); // Allow a tick for things to be updated, as a more reprentative test.
+    await delay(long); // Allow a tick for things to be updated, as a more reprentative test.
     collection.updateKnownTags(['zero', 'one', 'two', 'three', 'four'], getRecord);
-    await delay(); // Things won't update until the next tick.
+    await delay(long); // Things won't update until the next tick.
 
     collection.updateLiveTags(['five', 'three', 'six'], getModel);
-    await delay(100);
+    await delay(long);
     collection.updateLiveTags(['three', 'five'], getModel);
-    await delay();
-    //*/
+    await delay(long);
   });
   function check(label, expectedTags) {
     describe(label, function () {
@@ -154,8 +156,8 @@ describe('CollectionTransform', function () {
 	let transformers = collectionTransform.transformers;
 	expectedTags.forEach((tag, index) => {
 	  const transformer = transformers[index];
-	  expect(transformer.model.title).toBe(tag); // In this case, where records define title === tag.
-	  expect(transformer.view.title).toBe(transformer.model.title);
+	  expect(transformer.model?.title).toBe(tag); // In this case, where records define title === tag.
+	  expect(transformer.view.title).toBe(transformer.model?.title);
 	});
       });
     });
