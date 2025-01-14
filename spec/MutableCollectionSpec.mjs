@@ -46,6 +46,15 @@ describe('MutableCollection', function () {
   function getRecordSync(tag) {
     return Object.assign({}, data[tag]); // fresh object
   }
+  describe('setup from records', function () {
+    it('populates knownTags.', function () {
+      let records = [{title: 'a'}, {title: 'b'}],
+	  collection = new MutableCollection({records});
+      expect(collection.knownTags).toEqual(['a', 'b']);
+      expect(collection.a.title).toBe('a');
+      expect(collection.b.title).toBe('b');
+    });
+  });
   describe('knownTags', function () {
     let original, afterFirstUpdate;
     beforeAll(function () {
