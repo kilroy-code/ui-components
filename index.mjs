@@ -10,17 +10,11 @@ export { SecurityQuestionSelection } from './lib/security-question-selection.mjs
 export { MutableCollection, LiveRecord } from './lib/mutable-collection.mjs';
 export { CollectionTransform } from './lib/collection-transform.mjs';
 
-export { ViewTransform } from './lib/view-transform.mjs'; // fixme remove
-export { ListItem } from './lib/list-item.mjs';
-export { TabItem } from './lib/tab-item.mjs';
-
 export { BaseCollectionTransform, BaseTransformer } from './lib/base-collection-transform.mjs';
-export { ListTransform } from './lib/list-transform.mjs';
+export { LiveList } from './lib/live-list.mjs';
 export { ListItems } from './lib/list-items.mjs';
 export { MenuButton, MenuTransformer } from './lib/menu-button.mjs';
 export { MenuTabs } from './lib/menu-tabs.mjs';
-
-export { ChoiceAmongLocallyStoredOptions } from './lib/choice-among-locally-stored-options.mjs';
 
 export { SwitchUser } from './lib/switch-user.mjs';
 export { UserProfile } from './lib/user-profile.mjs';
