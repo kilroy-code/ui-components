@@ -3,7 +3,8 @@ export { App, MDElement } from './lib/md-element.mjs';
 
 export { MaterialIcon } from './lib/material-icon.mjs';
 export { AppQrcode } from './lib/app-qrcode.mjs';
-export { AvatarJdenticon } from './lib/app-jdenticon.mjs';
+export { AvatarJdenticon } from './lib/avatar-jdenticon.mjs';
+export { AvatarImage } from './lib/avatar-image.mjs';
 export { ListDivider } from './lib/list-divider.mjs';
 export { SecurityQuestionSelection } from './lib/security-question-selection.mjs';
 
