@@ -16,8 +16,10 @@ export { LiveList } from './lib/live-list.mjs';
 export { ListItems } from './lib/list-items.mjs';
 export { MenuButton, MenuTransformer } from './lib/menu-button.mjs';
 export { MenuTabs } from './lib/menu-tabs.mjs';
+export { AllUsersMenuButton, AllOtherUsersMenuButton } from './lib/all-users-menu-button.mjs';
 
 export { SwitchUser } from './lib/switch-user.mjs';
+export { AuthorizeUser } from './lib/authorize-user.mjs';
 export { UserProfile } from './lib/user-profile.mjs';
 export { AppShare } from './lib/app-share.mjs';
 export { AppFirstuse } from './lib/app-firstuse.mjs';
