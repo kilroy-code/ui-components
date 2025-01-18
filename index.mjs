@@ -18,6 +18,7 @@ export { MenuButton, MenuTransformer } from './lib/menu-button.mjs';
 export { MenuTabs } from './lib/menu-tabs.mjs';
 export { AllUsersMenuButton, AllOtherUsersMenuButton } from './lib/all-users-menu-button.mjs';
 
+export { CreateUser } from './lib/create-user.mjs';
 export { SwitchUser } from './lib/switch-user.mjs';
 export { AuthorizeUser } from './lib/authorize-user.mjs';
 export { UserProfile } from './lib/user-profile.mjs';
