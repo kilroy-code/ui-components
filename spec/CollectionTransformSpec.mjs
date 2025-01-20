@@ -21,6 +21,11 @@ class TestElement {
     element.parentElement = this;
     this.children.push(element);
   }
+  replaceWith(element) {
+    element.remove();
+    this.before(element);
+    this.remove();
+  }
   before(element) {
     element.remove();
     const index = this.parentElement.children.indexOf(this);
