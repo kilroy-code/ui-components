@@ -67,7 +67,7 @@ export class RuledElement extends HTMLElement {
 		   ...rulifyOptions} = {}) { // Everything else is handed to rulify as-is.
     const proto = this.prototype,
 	  ruleNames = this.ruleNames = (Object.getPrototypeOf(this).ruleNames || []).slice(); // A copy.
-    Rule.rulify(proto, rulifyOptions);
+    Rule.rulify(proto, {defaultAll: false, ...rulifyOptions});
     // Push any resulting rules onto ruleNames, for use by update(). IWBNI rulify did this for us. 
     Object.entries(Object.getOwnPropertyDescriptors(proto)).forEach(([key, {get}]) => get && ruleNames.push(key));
     customElements.define(tagName, this);
