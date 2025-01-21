@@ -1,4 +1,6 @@
 import '@material/web/all.js';
+import {styles as typescaleStyles} from '@material/web/typography/md-typescale-styles.js';
+document.adoptedStyleSheets.push(typescaleStyles.styleSheet);
 export { App, MDElement } from './lib/md-element.mjs';
 
 export { MaterialIcon } from './lib/material-icon.mjs';
