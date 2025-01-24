@@ -16,7 +16,7 @@ export { CollectionTransform } from './lib/collection-transform.mjs';
 export { BaseCollectionTransform, BaseTransformer } from './lib/base-collection-transform.mjs';
 export { LiveList } from './lib/live-list.mjs';
 export { ListItems } from './lib/list-items.mjs';
-export { MenuButton, MenuTransformer } from './lib/menu-button.mjs';
+export { MenuButton, MenuTransformer, ScreenMenuButton } from './lib/menu-button.mjs';
 export { MenuTabs } from './lib/menu-tabs.mjs';
 export { AllUsersMenuButton, AllOtherUsersMenuButton } from './lib/all-users-menu-button.mjs';
 
