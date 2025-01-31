@@ -1,6 +1,6 @@
 {
   "name": "@kilroy-code/ui-components",
-  "version": "0.0.13",
+  "version": "0.0.14",
   "description": "Elegant but powerful app and UI framework based on automatic dependency-directed-backtracking, web components, and material design.",
   "main": "index.mjs",
   "directories": {
@@ -11,7 +11,8 @@
   },
   "dependencies": {
     "@kilroy-code/rules": "^1.0.8",
-    "@material/web": "^2.2.0"
+    "@material/web": "^2.2.0",
+    "qr-code-styling": "^1.9.1"
   },
   "repository": {
     "type": "git",
