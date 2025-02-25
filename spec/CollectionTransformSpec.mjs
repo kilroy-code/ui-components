@@ -1,5 +1,5 @@
 import { Rule } from '@kilroy-code/rules';
-import { LiveCollection, LiveRecord } from '../lib/mutable-collection.mjs';
+import { LiveCollection, LiveRecord } from '../lib/live-collection.mjs';
 import { CollectionTransform } from '../lib/collection-transform.mjs';
 
 

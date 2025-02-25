@@ -1,6 +1,6 @@
 {
   "name": "@kilroy-code/ui-components",
-  "version": "0.0.14",
+  "version": "0.0.15",
   "description": "Elegant but powerful app and UI framework based on automatic dependency-directed-backtracking, web components, and material design.",
   "main": "index.mjs",
   "directories": {
@@ -10,7 +10,7 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "@kilroy-code/rules": "^1.0.8",
+    "@kilroy-code/rules": "^1.0.10",
     "@material/web": "^2.2.0",
     "qr-code-styling": "^1.9.1"
   },

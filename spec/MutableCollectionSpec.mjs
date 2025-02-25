@@ -1,5 +1,5 @@
 import { Rule } from '@kilroy-code/rules';
-import { LiveCollection, LiveRecord } from '../lib/mutable-collection.mjs';
+import { LiveCollection, LiveRecord } from '../lib/live-collection.mjs';
 
 describe('LiveRecord', function () {
   const data = {a: 17};
