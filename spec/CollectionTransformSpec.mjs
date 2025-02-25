@@ -1,5 +1,5 @@
 import { Rule } from '@kilroy-code/rules';
-import { MutableCollection, LiveRecord } from '../lib/mutable-collection.mjs';
+import { LiveCollection, LiveRecord } from '../lib/mutable-collection.mjs';
 import { CollectionTransform } from '../lib/collection-transform.mjs';
 
 
@@ -101,7 +101,7 @@ describe('CollectionTransform', function () {
   let collection, transforms = {};
   let short = 10, long = 20;
   beforeAll(async function () {
-    collection = new MutableCollection();
+    collection = new LiveCollection();
     const transformerParent = new TestElement();
     const viewParent = new TestElement();
     const transformerTag = 'transform';

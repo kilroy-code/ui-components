@@ -10,7 +10,7 @@ export { AvatarImage } from './lib/avatar-image.mjs';
 export { ListDivider } from './lib/list-divider.mjs';
 export { SecurityQuestionSelection } from './lib/security-question-selection.mjs';
 
-export { MutableCollection, LiveRecord } from './lib/mutable-collection.mjs';
+export { LiveCollection, LiveRecord } from './lib/mutable-collection.mjs';
 export { CollectionTransform } from './lib/collection-transform.mjs';
 
 export { BaseCollectionTransform, BaseTransformer } from './lib/base-collection-transform.mjs';

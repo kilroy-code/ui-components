@@ -1,5 +1,5 @@
 import { Rule } from '@kilroy-code/rules';
-import { MutableCollection, LiveRecord } from '../lib/mutable-collection.mjs';
+import { LiveCollection, LiveRecord } from '../lib/mutable-collection.mjs';
 
 describe('LiveRecord', function () {
   const data = {a: 17};
@@ -19,8 +19,8 @@ describe('LiveRecord', function () {
   });
 });
 	 
-describe('MutableCollection', function () {
-  const collection = new MutableCollection();
+describe('LiveCollection', function () {
+  const collection = new LiveCollection();
   class Referencer {
     get knownTags() { return collection.knownTags; }
     get liveTags() { return collection.liveTags; }
@@ -49,7 +49,7 @@ describe('MutableCollection', function () {
   describe('setup from records', function () {
     it('populates knownTags.', function () {
       let records = [{title: 'a'}, {title: 'b'}],
-	  collection = new MutableCollection({records});
+	  collection = new LiveCollection({records});
       expect(collection.knownTags).toEqual(['a', 'b']);
       expect(collection.a.title).toBe('a');
       expect(collection.b.title).toBe('b');
