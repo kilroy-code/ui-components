@@ -1,13 +1,13 @@
 {
   "name": "@kilroy-code/ui-components",
-  "version": "0.0.17",
+  "version": "0.0.18",
   "description": "Elegant but powerful app and UI framework based on automatic dependency-directed-backtracking, web components, and material design.",
   "main": "index.mjs",
   "directories": {
     "example": "examples"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jasmine"
   },
   "dependencies": {
     "@kilroy-code/rules": "^1.0.11",
