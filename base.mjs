@@ -10,14 +10,12 @@ export class RuledElement extends HTMLElement {
   connectedCallback() {
     // A browser implementation might not have attributes available to the constructor. But they are always available here.
     this.setPropertiesFromAttributes();
-    // If the content references other rules -- including rules in the connectedCallback/content/template of elements 
-    this.content;  // that are defined by our template -- then resetting those will cause our content to be recomputed.
-    // Here we deliberately do this in the next tick, so that initialize/update/mumbeEffect rules of our shadow
     setTimeout(() => this.initialize());  // children are NOT used by our content.
   }
   initialize() { // Default initializes from attributes and invokes all our rules for any potential side effect on display.
-    this.update; // Compute these two eager rules for effect, but in a different dynamic context.
-    setTimeout(() => this.afterInitialize());
+    this.content;
+    // Compute these two eager rules for effect, but in a different dynamic context.
+    setTimeout(() => { this.update; this.afterInitialize(); });
   }
   afterInitialize() {
   }
