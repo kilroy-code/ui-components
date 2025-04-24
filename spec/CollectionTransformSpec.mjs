@@ -59,7 +59,7 @@ describe('TestElement', function () { // Test our TestElement harness
 
 class Transform extends TestElement {
   get model() { // Must reference through collection[tag] so that it gets updated.
-    return this.collection[this.dataset.key];
+    return this.collection[this.dataset.key] || null;
   }
   get view() {
     return new TestElement();
