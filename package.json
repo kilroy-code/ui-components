@@ -1,6 +1,6 @@
 {
   "name": "@kilroy-code/ui-components",
-  "version": "0.0.23",
+  "version": "0.0.24",
   "description": "Elegant but powerful app and UI framework based on automatic dependency-directed-backtracking, web components, and material design.",
   "main": "index.mjs",
   "directories": {
