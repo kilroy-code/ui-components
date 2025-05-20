@@ -1,10 +1,10 @@
 import { Rule } from '@kilroy-code/rules';
-const {customElements, getComputedStyle} = window; // Defined by browser.
+const {customElements, getComputedStyle} = globalThis; // Defined by browser.
 
 export function hostElement(event) { // Returns the custom element that an event handler is attached to.
   return event.target.getRootNode().host;
 }
-window.hostElement = hostElement;
+globalThis.hostElement = hostElement;
 
 export class RuledElement extends HTMLElement {
   connectedCallback() {
