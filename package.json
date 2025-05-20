@@ -1,18 +1,27 @@
 {
   "name": "@kilroy-code/ui-components",
-  "version": "0.0.25",
+  "version": "0.0.26",
   "description": "Elegant but powerful app and UI framework based on automatic dependency-directed-backtracking, web components, and material design.",
   "main": "index.mjs",
   "directories": {
     "example": "examples"
   },
   "scripts": {
-    "test": "jasmine"
+    "test": "jasmine",
+    "build": "rollup -c",
+    "build-dev": "npx rollup -c --environment NODE_ENV:development"
   },
   "dependencies": {
     "@kilroy-code/rules": "^1.0.11",
     "@material/web": "^2.2.0",
     "qr-code-styling": "^1.9.1"
+  },
+  "devDependencies": {
+    "@rollup/plugin-json": "^6.1.0",
+    "@rollup/plugin-node-resolve": "15.3",
+    "@rollup/plugin-terser": "^0.4.4",
+    "jasmine": "^5.7.1",
+    "rollup": "4.27"
   },
   "repository": {
     "type": "git",
