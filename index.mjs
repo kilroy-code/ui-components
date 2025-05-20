@@ -1,4 +1,5 @@
-import '@material/web/all.js';
+export { Rule } from '@kilroy-code/rules';
+import '@material/web/all.js'; // FIXME: import just what we actually use.
 import {styles as typescaleStyles} from '@material/web/typography/md-typescale-styles.js';
 document.adoptedStyleSheets.push(typescaleStyles.styleSheet);
 export { App, MDElement } from './lib/md-element.mjs';
@@ -29,7 +30,5 @@ export { AppShare } from './lib/app-share.mjs';
 export { AppFirstuse } from './lib/app-firstuse.mjs';
 export { BasicApp } from './lib/basic-app.mjs';
 
-
-
-
-
+import * as pkg from "./package.json" with { type: 'json' };
+export const {name, version} = pkg.default;
