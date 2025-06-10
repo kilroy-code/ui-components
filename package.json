@@ -1,8 +1,12 @@
 {
   "name": "@kilroy-code/ui-components",
-  "version": "0.0.27",
+  "version": "0.0.28",
   "description": "Elegant but powerful app and UI framework based on automatic dependency-directed-backtracking, web components, and material design.",
-  "exports": "./index.mjs",
+  "exports": {
+    ".": "./index.mjs",
+    "./spec/CollectionTransformSpec.mjs": "./spec/CollectionTransformSpec.mjs",
+    "./spec/MutableCollectionSpec.mjs": "./spec/MutableCollectionSpec.mjs"
+  },
   "directories": {
     "example": "examples"
   },
