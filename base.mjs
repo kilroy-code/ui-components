@@ -25,7 +25,8 @@ export class RuledElement extends HTMLElement {
       const attributeName = attributes[index].name,
 	    propertyName = this.attributeToPropertyName(attributeName, 'en'),
 	    attributeValue = this.getAttribute(attributeName),
-	    parseable = attributeValue && /^-?[0-9]/.test(attributeValue);
+	    // Is attributeValue entirely a number (integer or floating point)?
+	    parseable = attributeValue &&  /^[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?$/.test(attributeValue);
       this[propertyName] = parseable ? JSON.parse(attributeValue) : attributeValue;
     }
   }
