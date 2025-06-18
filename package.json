@@ -1,6 +1,6 @@
 {
   "name": "@kilroy-code/ui-components",
-  "version": "0.0.33",
+  "version": "0.0.34",
   "description": "Elegant but powerful app and UI framework based on automatic dependency-directed-backtracking, web components, and material design.",
   "exports": {
     ".": "./index.mjs",
@@ -16,7 +16,7 @@
     "build-dev": "npx rollup -c --environment NODE_ENV:development"
   },
   "dependencies": {
-    "@kilroy-code/rules": "^1.0.11",
+    "@kilroy-code/rules": "^1.0.13",
     "@material/web": "^2.2.0",
     "qr-code-styling": "^1.9.1"
   },
